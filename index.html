@@ -15863,5 +15863,239 @@ function toggleFullInterview(card) {
   });
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FLOATING MUSIC PLAYER
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+.fm-player {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 10001;
+  font-family: 'Barlow', sans-serif;
+}
+.fm-toggle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-elevated, #1a1a2e);
+  border: 2px solid var(--accent-gold, #d4a843);
+  color: var(--accent-gold, #d4a843);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.fm-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.7);
+}
+.fm-toggle.playing {
+  animation: fm-pulse 2s ease-in-out infinite;
+}
+@keyframes fm-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  50% { box-shadow: 0 4px 20px rgba(212,168,67,0.4), 0 0 12px rgba(212,168,67,0.2); }
+}
+.fm-panel {
+  position: absolute;
+  bottom: 64px;
+  right: 0;
+  width: 320px;
+  background: var(--bg-card, #141428);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: 14px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  overflow: hidden;
+  display: none;
+  animation: fm-slideUp 0.25s ease-out;
+}
+@keyframes fm-slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fm-panel.open { display: block; }
+.fm-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #2a2a4a);
+}
+.fm-panel-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: var(--accent-gold, #d4a843);
+}
+.fm-close {
+  background: none;
+  border: none;
+  color: var(--text-muted, #888);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.fm-close:hover { color: var(--text-primary, #eee); }
+.fm-playlist {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.fm-playlist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 14px;
+}
+.fm-playlist li:hover { background: rgba(255,255,255,0.04); }
+.fm-playlist li.active { background: rgba(212,168,67,0.08); }
+.fm-track-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.fm-track-name {
+  flex: 1;
+  color: var(--text-primary, #eee);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fm-track-genre {
+  font-size: 14px;
+  color: var(--text-muted, #888);
+  white-space: nowrap;
+}
+.fm-embed {
+  border-top: 1px solid var(--border, #2a2a4a);
+  padding: 0;
+  display: none;
+}
+.fm-embed.has-track { display: block; }
+.fm-embed iframe {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border: none;
+}
+
+/* mobile: stack above theme switcher */
+@media (max-width: 600px) {
+  .fm-player { bottom: 72px; right: 16px; }
+  .fm-panel { width: 290px; right: -8px; }
+}
+</style>
+
+<div class="fm-player" id="floatingPlayer">
+  <button class="fm-toggle" id="fmToggle" onclick="toggleMusicPanel()" title="Music Player">&#9835;</button>
+  <div class="fm-panel" id="fmPanel">
+    <div class="fm-panel-header">
+      <div class="fm-panel-title">SOUNDTRACK</div>
+      <button class="fm-close" onclick="toggleMusicPanel()">&times;</button>
+    </div>
+    <ul class="fm-playlist" id="fmPlaylist">
+      <li onclick="loadTrack(0)" data-track="0">
+        <div class="fm-track-dot" style="background:#E91E63"></div>
+        <div class="fm-track-name">Lavender's Theme</div>
+        <div class="fm-track-genre">Dream Pop</div>
+      </li>
+      <li onclick="loadTrack(1)" data-track="1">
+        <div class="fm-track-dot" style="background:#2196F3"></div>
+        <div class="fm-track-name">Moor's Theme</div>
+        <div class="fm-track-genre">Orchestral</div>
+      </li>
+      <li onclick="loadTrack(2)" data-track="2">
+        <div class="fm-track-dot" style="background:#9C27B0"></div>
+        <div class="fm-track-name">Aramil's Theme</div>
+        <div class="fm-track-genre">Villain Waltz</div>
+      </li>
+      <li onclick="loadTrack(3)" data-track="3">
+        <div class="fm-track-dot" style="background:#FF5722"></div>
+        <div class="fm-track-name">Opal's Theme</div>
+        <div class="fm-track-genre">80s Power</div>
+      </li>
+      <li onclick="loadTrack(4)" data-track="4">
+        <div class="fm-track-dot" style="background:#4CAF50"></div>
+        <div class="fm-track-name">Bob's Theme</div>
+        <div class="fm-track-genre">Heist Rap</div>
+      </li>
+      <li onclick="loadTrack(5)" data-track="5">
+        <div class="fm-track-dot" style="background:var(--accent-gold, #d4a843)"></div>
+        <div class="fm-track-name">Fizzleblast's Field Trip</div>
+        <div class="fm-track-genre">Anthem</div>
+      </li>
+    </ul>
+    <div class="fm-embed" id="fmEmbed">
+      <iframe id="fmIframe" src="about:blank" allow="autoplay; encrypted-media; fullscreen" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var tracks = [
+    { id: '366fb55b-6ac0-4c8b-a12a-28fe54f51e9d', name: "Lavender's Theme" },
+    { id: 'bf306394-8201-4306-a7ca-c3b0007f463f', name: "Moor's Theme" },
+    { id: 'ce5a496c-ef35-40eb-b43a-512d35760729', name: "Aramil's Theme" },
+    { id: '738f598b-18ed-4962-b8f0-26141055b315', name: "Opal's Theme" },
+    { id: '352bb55c-c9b0-4b1c-9ba1-cbc905a6750e', name: "Bob's Theme" },
+    { id: '5c59be9a-84a9-4d07-aad8-a798f63c133d', name: "Fizzleblast's Field Trip" }
+  ];
+  var currentTrack = -1;
+
+  window.toggleMusicPanel = function() {
+    var panel = document.getElementById('fmPanel');
+    panel.classList.toggle('open');
+  };
+
+  window.loadTrack = function(idx) {
+    var iframe = document.getElementById('fmIframe');
+    var embed = document.getElementById('fmEmbed');
+    var items = document.querySelectorAll('#fmPlaylist li');
+
+    // If clicking the same track, toggle it off
+    if (currentTrack === idx) {
+      iframe.src = 'about:blank';
+      embed.classList.remove('has-track');
+      items[idx].classList.remove('active');
+      document.getElementById('fmToggle').classList.remove('playing');
+      currentTrack = -1;
+      return;
+    }
+
+    // Deactivate previous
+    items.forEach(function(li) { li.classList.remove('active'); });
+
+    // Load new track
+    currentTrack = idx;
+    iframe.src = 'https://suno.com/embed/' + tracks[idx].id + '?autoplay=true';
+    embed.classList.add('has-track');
+    items[idx].classList.add('active');
+    document.getElementById('fmToggle').classList.add('playing');
+  };
+
+  // Close panel when clicking outside
+  document.addEventListener('click', function(e) {
+    var player = document.getElementById('floatingPlayer');
+    var panel = document.getElementById('fmPanel');
+    if (panel.classList.contains('open') && !player.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
